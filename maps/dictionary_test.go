@@ -18,7 +18,7 @@ func TestSearch(t *testing.T) {
 			t.Fatal("expected to get an error.")
 		}
 
-		assertErrors(t, got, ErrNotFound)
+		assertError(t, got, ErrNotFound)
 	})
 }
 
@@ -40,21 +40,36 @@ func TestAdd(t *testing.T) {
 		dictionary := Dictionary{word: definition}
 		err := dictionary.Add(word, "new test")
 
-		assertErrors(t, err, ErrWordExists)
+		assertError(t, err, ErrWordExists)
 
 		assertDefinition(t, dictionary, word, definition)
 	})
 }
 
 func TestUpdate(t *testing.T) {
-	word := "test"
-	definition := "this is just a test"
-	dictionary := Dictionary{word: definition}
-	newDefinition := "new definition"
+	t.Run("existing word", func(t *testing.T) {
 
-	dictionary.Update(word, newDefinition)
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{word: definition}
+		newDefinition := "new definition"
+		err := dictionary.Update(word, newDefinition)
 
-	assertDefinition(t, dictionary, word, newDefinition)
+		dictionary.Update(word, newDefinition)
+
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, newDefinition)
+	})
+
+	t.Run("new word", func(t *testing.T) {
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{}
+
+		err := dictionary.Update(word, definition)
+
+		assertError(t, err, ErrWordDoesNotExist)
+	})
 }
 
 func assertDefinition(t testing.TB, dictionary Dictionary, word, definition string) {
@@ -75,7 +90,7 @@ func assertStrings(t testing.TB, got, want string) {
 	}
 }
 
-func assertErrors(t testing.TB, got, want error) {
+func assertError(t testing.TB, got, want error) {
 	t.Helper()
 
 	if got != want {
